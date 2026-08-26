@@ -10,7 +10,8 @@ def main():
         data="dataset_split/data.yaml",
         epochs=50,
         imgsz=640,
-        batch=8,
+        batch=4,
+        workers=0,
         project="runs",
         name="drone_bird_yolo11n"
     )
