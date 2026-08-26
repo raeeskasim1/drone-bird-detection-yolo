@@ -1,0 +1,15 @@
+path: ../dataset_split
+
+train: images/train
+val: images/val
+test: images/test
+
+nc: 2
+names: ['bird', 'drone']
+
+roboflow:
+  workspace: project-rvhpc
+  project: drone-vs-bird-detection-bisbz
+  version: 1
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/project-rvhpc/drone-vs-bird-detection-bisbz/dataset/1

@@ -47,34 +47,63 @@ def copy_pairs(pairs, split_name):
             OUTPUT_DIR / "labels" / split_name / label_path.name
         )
 
+def check_distribution():
+    print("\nSplit distribution:")
+
+    for split in ["train", "val", "test"]:
+        image_dir = OUTPUT_DIR / "images" / split
+
+        bird_count = 0
+        drone_count = 0
+        mixed_count = 0
+
+        for image_path in image_dir.iterdir():
+            name = image_path.name.lower()
+
+            if name.startswith("bird"):
+                bird_count += 1
+            elif name.startswith("drone"):
+                drone_count += 1
+            elif name.startswith("mixed"):
+                mixed_count += 1
+
+        print(
+            f"{split}: "
+            f"bird={bird_count}, "
+            f"drone={drone_count}, "
+            f"mixed={mixed_count}"
+        )
 
 def main():
-    random.seed(RANDOM_SEED)
+    # random.seed(RANDOM_SEED)
 
-    pairs = get_image_label_pairs()
+    # pairs = get_image_label_pairs()
 
-    print(f"Total image-label pairs: {len(pairs)}")
+    # print(f"Total image-label pairs: {len(pairs)}")
 
-    random.shuffle(pairs)
+    # random.shuffle(pairs)
 
-    total = len(pairs)
+    # total = len(pairs)
 
-    train_end = int(total * TRAIN_RATIO)
-    val_end = train_end + int(total * VAL_RATIO)
+    # train_end = int(total * TRAIN_RATIO)
+    # val_end = train_end + int(total * VAL_RATIO)
 
-    train_pairs = pairs[:train_end]
-    val_pairs = pairs[train_end:val_end]
-    test_pairs = pairs[val_end:]
+    # train_pairs = pairs[:train_end]
+    # val_pairs = pairs[train_end:val_end]
+    # test_pairs = pairs[val_end:]
 
-    create_folders()
+    # create_folders()
 
-    copy_pairs(train_pairs, "train")
-    copy_pairs(val_pairs, "val")
-    copy_pairs(test_pairs, "test")
+    # copy_pairs(train_pairs, "train")
+    # copy_pairs(val_pairs, "val")
+    # copy_pairs(test_pairs, "test")
 
-    print(f"Train: {len(train_pairs)}")
-    print(f"Validation: {len(val_pairs)}")
-    print(f"Test: {len(test_pairs)}")
+    # print(f"Train: {len(train_pairs)}")
+    # print(f"Validation: {len(val_pairs)}")
+    # print(f"Test: {len(test_pairs)}")
+
+
+    check_distribution()
 
 
 if __name__ == "__main__":
