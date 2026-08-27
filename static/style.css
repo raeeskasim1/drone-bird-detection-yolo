@@ -1,0 +1,320 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f5f7fa;
+    color: #1f2937;
+}
+
+
+/* Header */
+
+.header {
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+
+    padding: 22px 8%;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 24px;
+}
+
+.header p {
+    margin: 5px 0 0;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+
+/* Model status */
+
+.status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    font-size: 14px;
+}
+
+.status-dot {
+    width: 9px;
+    height: 9px;
+
+    background: #22c55e;
+
+    border-radius: 50%;
+}
+
+
+/* Main */
+
+.container {
+    width: 90%;
+    max-width: 1000px;
+
+    margin: 40px auto;
+
+    display: grid;
+    gap: 25px;
+}
+
+
+/* Cards */
+
+.upload-card,
+.result-card {
+    background: white;
+
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+
+    padding: 28px;
+}
+
+.upload-card h2,
+.result-card h2 {
+    margin-top: 0;
+}
+
+.description {
+    color: #6b7280;
+    margin-bottom: 24px;
+}
+
+
+/* Upload */
+
+.upload-box {
+    border: 2px dashed #cbd5e1;
+    border-radius: 10px;
+
+    min-height: 130px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+
+    transition: 0.2s;
+}
+
+.upload-box:hover {
+    border-color: #2563eb;
+    background: #f8fafc;
+}
+
+.upload-title {
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.upload-text {
+    color: #6b7280;
+    font-size: 13px;
+}
+
+
+/* Selected file */
+
+.file-info {
+    margin-top: 12px;
+
+    color: #475569;
+    font-size: 14px;
+}
+
+
+/* Preview */
+
+.preview-image {
+    display: block;
+
+    max-width: 100%;
+    max-height: 400px;
+
+    margin: 20px auto;
+
+    border-radius: 8px;
+}
+
+
+/* Button */
+
+.detect-button {
+    width: 100%;
+
+    margin-top: 20px;
+    padding: 13px;
+
+    border: none;
+    border-radius: 8px;
+
+    background: #2563eb;
+    color: white;
+
+    font-size: 15px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.detect-button:hover {
+    background: #1d4ed8;
+}
+
+.detect-button:disabled {
+    background: #94a3b8;
+    cursor: not-allowed;
+}
+
+
+/* Error */
+
+.error-message {
+    color: #dc2626;
+    font-size: 14px;
+    margin-bottom: 0;
+}
+
+
+/* Results */
+
+.result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    gap: 20px;
+
+    margin-bottom: 20px;
+}
+
+.result-header p {
+    color: #6b7280;
+    margin: 5px 0 0;
+}
+
+
+/* Metrics */
+
+.metrics {
+    display: flex;
+    gap: 15px;
+}
+
+.metric {
+    min-width: 100px;
+
+    padding: 10px 15px;
+
+    background: #f8fafc;
+    border-radius: 8px;
+
+    text-align: center;
+}
+
+.metric span {
+    display: block;
+
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.metric small {
+    color: #6b7280;
+}
+
+
+/* Result image */
+
+.result-image {
+    display: block;
+
+    max-width: 100%;
+    max-height: 550px;
+
+    margin: 0 auto 25px;
+
+    border-radius: 8px;
+}
+
+
+/* Detection cards */
+
+.detection-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 14px 0;
+
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.detection-item:last-child {
+    border-bottom: none;
+}
+
+.detection-class {
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.detection-confidence {
+    color: #475569;
+}
+
+
+/* Utility */
+
+.hidden {
+    display: none;
+}
+
+
+/* Mobile */
+
+@media (max-width: 650px) {
+
+    .header {
+        padding: 18px 5%;
+    }
+
+    .header p {
+        display: none;
+    }
+
+    .container {
+        width: 94%;
+        margin-top: 20px;
+    }
+
+    .upload-card,
+    .result-card {
+        padding: 20px;
+    }
+
+    .result-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .metrics {
+        width: 100%;
+    }
+
+    .metric {
+        flex: 1;
+    }
+}

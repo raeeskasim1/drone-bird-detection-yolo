@@ -6,6 +6,7 @@ import time
 from pathlib import Path
 from uuid import uuid4
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 app = FastAPI()
 
@@ -20,6 +21,12 @@ app.mount(
     "/outputs",
     StaticFiles(directory=OUTPUT_DIR),
     name="outputs"
+)
+
+app.mount(
+    "/static",
+    StaticFiles(directory="static"),
+    name="static"
 )
 
 model = YOLO(
@@ -92,3 +99,7 @@ async def predict(file: UploadFile = File(...)):
         "detections": detections,
         "annotated_image": f"/outputs/{filename}"
     }
+
+@app.get("/")
+def home():
+    return FileResponse("static/index.html")
