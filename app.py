@@ -17,10 +17,30 @@ OUTPUT_DIR.mkdir(
     exist_ok=True
 )
 
+VIDEO_INPUT_DIR = Path("runs/video_inputs")
+
+VIDEO_INPUT_DIR.mkdir(
+    parents=True,
+    exist_ok=True
+)
+
+VIDEO_OUTPUT_DIR = Path("runs/video_outputs").resolve()
+
+VIDEO_OUTPUT_DIR.mkdir(
+    parents=True,
+    exist_ok=True
+)
+
 app.mount(
     "/outputs",
     StaticFiles(directory=OUTPUT_DIR),
     name="outputs"
+)
+
+app.mount(
+    "/video-outputs",
+    StaticFiles(directory=VIDEO_OUTPUT_DIR),
+    name="video_outputs"
 )
 
 app.mount(
@@ -98,6 +118,88 @@ async def predict(file: UploadFile = File(...)):
         "inference_ms": round(inference_ms, 2),
         "detections": detections,
         "annotated_image": f"/outputs/{filename}"
+    }
+
+@app.post("/track-video")
+async def track_video(file:UploadFile = File(...)):
+
+    extension = Path(file.filename).suffix.lower()
+
+    allowed_extensions = {
+        ".mp4",
+        ".avi",
+        ".mov",
+        ".mkv"
+    }
+
+    if extension not in allowed_extensions:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid video file"
+        )
+
+    filename = f"video_{uuid4().hex}{extension}"
+
+    input_path = VIDEO_INPUT_DIR / filename
+
+    with open(input_path, "wb") as buffer:
+
+        while True:
+
+            chunk = await file.read(1024 * 1024)
+
+            if not chunk:
+                break
+
+            buffer.write(chunk)
+
+    job_id = f"tracking_{uuid4().hex}"
+
+    results = model.track(
+        source=str(input_path),
+        tracker="bytetrack.yaml",
+        conf=0.25,
+        imgsz=640,
+        save=True,
+        project=str(VIDEO_OUTPUT_DIR),
+        name=job_id,
+        stream=True,
+        verbose=False
+    )
+
+
+    for _ in results:
+        pass
+
+    output_folder = VIDEO_OUTPUT_DIR / job_id
+
+    video_files = [
+        file
+        for file in output_folder.iterdir()
+        if file.suffix.lower() in {".mp4", ".avi", ".mov", ".mkv"}
+    ]
+
+    
+    if not video_files:
+        raise HTTPException(
+        status_code=500,
+        detail="Processed video was not created"
+    )
+
+
+    output_video = video_files[0]
+
+    relative_path = output_video.relative_to(
+        VIDEO_OUTPUT_DIR
+    ).as_posix()
+
+
+    input_path.unlink(missing_ok=True)
+
+
+    return {
+        "message": "Video tracking completed",
+        "processed_video": f"/video-outputs/{relative_path}"
     }
 
 @app.get("/")
