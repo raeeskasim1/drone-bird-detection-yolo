@@ -18,10 +18,13 @@
 
 <body>
 
+    <body>
+
     <header class="header">
 
         <div>
             <h1>Drone & Bird Detection</h1>
+
             <p>
                 YOLO11 based object detection system
             </p>
@@ -37,113 +40,286 @@
 
     <main class="container">
 
-        <section class="upload-card">
 
-            <h2>Image Detection</h2>
+        <!-- Mode Tabs -->
 
-            <p class="description">
-                Upload an image containing a bird or drone
-                and run object detection.
-            </p>
-
-
-            <label
-                class="upload-box"
-                for="imageInput"
-            >
-
-                <span class="upload-title">
-                    Choose an image
-                </span>
-
-                <span class="upload-text">
-                    JPG, JPEG or PNG
-                </span>
-
-            </label>
-
-
-            <input
-                type="file"
-                id="imageInput"
-                accept="image/*"
-                hidden
-            >
-
-
-            <div
-                id="fileInfo"
-                class="file-info"
-            ></div>
-
-
-            <img
-                id="previewImage"
-                class="preview-image hidden"
-                alt="Selected image preview"
-            >
-
+        <div class="mode-tabs">
 
             <button
-                id="detectButton"
-                class="detect-button"
-                disabled
+                class="mode-tab active"
+                data-mode="image"
             >
-                Detect Objects
+                Image Detection
             </button>
 
+            <button
+                class="mode-tab"
+                data-mode="video"
+            >
+                Video Tracking
+            </button>
 
-            <p
-                id="errorMessage"
-                class="error-message"
-            ></p>
-
-        </section>
+        </div>
 
 
-        <section
-            id="resultSection"
-            class="result-card hidden"
+
+        <!-- ========================= -->
+        <!-- IMAGE MODE -->
+        <!-- ========================= -->
+
+        <div
+            id="imageMode"
+            class="mode-section"
         >
 
-            <div class="result-header">
 
-                <div>
-                    <h2>Detection Result</h2>
-                    <p>YOLO11 prediction</p>
-                </div>
+            <section class="upload-card">
 
-                <div class="metrics">
+                <h2>Image Detection</h2>
 
-                    <div class="metric">
-                        <span id="detectionCount">0</span>
-                        <small>Objects</small>
-                    </div>
-
-                    <div class="metric">
-                        <span id="inferenceTime">0 ms</span>
-                        <small>Inference</small>
-                    </div>
-
-                </div>
-
-            </div>
+                <p class="description">
+                    Upload an image containing a bird or drone
+                    and run object detection.
+                </p>
 
 
-            <img
-                id="resultImage"
-                class="result-image"
-                alt="Detection result"
+                <label
+                    class="upload-box"
+                    for="imageInput"
+                >
+
+                    <span class="upload-title">
+                        Choose an image
+                    </span>
+
+                    <span class="upload-text">
+                        JPG, JPEG or PNG
+                    </span>
+
+                </label>
+
+
+                <input
+                    type="file"
+                    id="imageInput"
+                    accept="image/*"
+                    hidden
+                >
+
+
+                <div
+                    id="fileInfo"
+                    class="file-info"
+                ></div>
+
+
+                <img
+                    id="previewImage"
+                    class="preview-image hidden"
+                    alt="Selected image preview"
+                >
+
+
+                <button
+                    id="detectButton"
+                    class="detect-button"
+                    disabled
+                >
+                    Detect Objects
+                </button>
+
+
+                <p
+                    id="errorMessage"
+                    class="error-message"
+                ></p>
+
+            </section>
+
+
+
+            <!-- Image Result -->
+
+            <section
+                id="resultSection"
+                class="result-card hidden"
             >
 
+                <div class="result-header">
 
-            <div>
-                <h3>Detections</h3>
+                    <div>
+                        <h2>Detection Result</h2>
 
-                <div id="detectionsList"></div>
-            </div>
+                        <p>
+                            YOLO11 prediction
+                        </p>
+                    </div>
 
-        </section>
+
+                    <div class="metrics">
+
+                        <div class="metric">
+
+                            <span id="detectionCount">
+                                0
+                            </span>
+
+                            <small>
+                                Objects
+                            </small>
+
+                        </div>
+
+
+                        <div class="metric">
+
+                            <span id="inferenceTime">
+                                0 ms
+                            </span>
+
+                            <small>
+                                Inference
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <img
+                    id="resultImage"
+                    class="result-image"
+                    alt="Detection result"
+                >
+
+
+                <div>
+
+                    <h3>
+                        Detections
+                    </h3>
+
+                    <div id="detectionsList"></div>
+
+                </div>
+
+            </section>
+
+        </div>
+
+
+
+        <!-- ========================= -->
+        <!-- VIDEO MODE -->
+        <!-- ========================= -->
+
+        <div
+            id="videoMode"
+            class="mode-section hidden"
+        >
+
+
+            <section class="upload-card">
+
+                <h2>Video Tracking</h2>
+
+                <p class="description">
+                    Upload a video to detect and track
+                    birds and drones using ByteTrack.
+                </p>
+
+
+                <label
+                    class="upload-box"
+                    for="videoInput"
+                >
+
+                    <span class="upload-title">
+                        Choose a video
+                    </span>
+
+                    <span class="upload-text">
+                        MP4, AVI, MOV or MKV
+                    </span>
+
+                </label>
+
+
+                <input
+                    type="file"
+                    id="videoInput"
+                    accept="video/*"
+                    hidden
+                >
+
+
+                <div
+                    id="videoFileInfo"
+                    class="file-info"
+                ></div>
+
+
+                <video
+                    id="videoPreview"
+                    class="preview-image hidden"
+                    controls
+                ></video>
+
+
+                <button
+                    id="trackButton"
+                    class="detect-button"
+                    disabled
+                >
+                    Track Objects
+                </button>
+
+
+                <p
+                    id="videoError"
+                    class="error-message"
+                ></p>
+
+            </section>
+
+
+
+            <!-- Video Result -->
+
+            <section
+                id="videoResultSection"
+                class="result-card hidden"
+            >
+
+                <div class="result-header">
+
+                    <div>
+
+                        <h2>
+                            Tracking Result
+                        </h2>
+
+                        <p>
+                            YOLO11 + ByteTrack
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <video
+                    id="trackedVideo"
+                    class="result-image"
+                    controls
+                ></video>
+
+            </section>
+
+        </div>
+
 
     </main>
 

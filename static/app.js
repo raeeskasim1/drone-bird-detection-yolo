@@ -1,3 +1,44 @@
+const tabs =
+    document.querySelectorAll(".mode-tab")
+
+const imageMode =
+    document.getElementById("imageMode")
+
+const videoMode =
+    document.getElementById("videoMode")
+
+
+tabs.forEach(tab => {
+
+    tab.addEventListener("click", () => {
+
+        tabs.forEach(item => {
+            item.classList.remove("active")
+        })
+
+        tab.classList.add("active")
+
+
+        imageMode.classList.add("hidden")
+        videoMode.classList.add("hidden")
+
+
+        const mode =
+            tab.dataset.mode
+
+
+        if (mode === "image") {
+            imageMode.classList.remove("hidden")
+        }
+
+        if (mode === "video") {
+            videoMode.classList.remove("hidden")
+        }
+
+    })
+
+})
+
 const imageInput =
     document.getElementById("imageInput")
 
@@ -192,6 +233,165 @@ detectButton.addEventListener(
 
             detectButton.textContent =
                 "Detect Objects"
+
+        }
+
+    }
+)
+
+// ==============================
+// VIDEO TRACKING
+// ==============================
+
+const videoInput =
+    document.getElementById("videoInput")
+
+const videoFileInfo =
+    document.getElementById("videoFileInfo")
+
+const videoPreview =
+    document.getElementById("videoPreview")
+
+const trackButton =
+    document.getElementById("trackButton")
+
+const videoError =
+    document.getElementById("videoError")
+
+const videoResultSection =
+    document.getElementById("videoResultSection")
+
+const trackedVideo =
+    document.getElementById("trackedVideo")
+
+
+
+// When user selects a video
+videoInput.addEventListener("change", () => {
+
+    const file = videoInput.files[0]
+
+    if (!file) {
+        return
+    }
+
+
+    // Show file information
+    videoFileInfo.textContent =
+        `${file.name} • ${(file.size / (1024 * 1024)).toFixed(1)} MB`
+
+
+    // Create temporary browser preview URL
+    const previewURL =
+        URL.createObjectURL(file)
+
+
+    videoPreview.src = previewURL
+
+    videoPreview.classList.remove("hidden")
+
+
+    // Enable tracking button
+    trackButton.disabled = false
+
+
+    // Hide previous result
+    videoResultSection.classList.add("hidden")
+
+
+    videoError.textContent = ""
+
+})
+
+trackButton.addEventListener(
+    "click",
+    async () => {
+
+        const file =
+            videoInput.files[0]
+
+
+        if (!file) {
+
+            videoError.textContent =
+                "Please select a video."
+
+            return
+        }
+
+
+        const formData =
+            new FormData()
+
+
+        formData.append(
+            "file",
+            file
+        )
+
+
+        trackButton.disabled = true
+
+        trackButton.textContent =
+            "Processing video..."
+
+        videoError.textContent = ""
+
+
+        try {
+
+            const response =
+                await fetch(
+                    "/track-video",
+                    {
+                        method: "POST",
+                        body: formData
+                    }
+                )
+
+
+            const data =
+                await response.json()
+
+
+            if (!response.ok) {
+
+                videoError.textContent =
+                    data.detail ||
+                    "Video tracking failed."
+
+                return
+            }
+
+
+            trackedVideo.src =
+                data.processed_video
+
+
+            trackedVideo.load()
+
+
+            videoResultSection.classList.remove(
+                "hidden"
+            )
+
+        }
+
+        catch (error) {
+
+            console.error(error)
+
+            videoError.textContent =
+                "Unable to connect to the tracking server."
+
+        }
+
+        finally {
+
+            trackButton.disabled = false
+
+            trackButton.textContent =
+                "Track Objects"
 
         }
 

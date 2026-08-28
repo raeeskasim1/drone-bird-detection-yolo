@@ -7,6 +7,7 @@ from pathlib import Path
 from uuid import uuid4
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+import subprocess
 
 app = FastAPI()
 
@@ -189,7 +190,22 @@ async def track_video(file:UploadFile = File(...)):
 
     output_video = video_files[0]
 
-    relative_path = output_video.relative_to(
+    mp4_output = output_video.with_suffix(".mp4")
+
+    subprocess.run(
+        [
+            "ffmpeg",
+            "-y",
+            "-i", str(output_video),
+            "-c:v", "libx264",
+            "-pix_fmt", "yuv420p",
+            "-movflags", "+faststart",
+            str(mp4_output)
+        ],
+        check=True
+    )
+
+    relative_path = mp4_output.relative_to(
         VIDEO_OUTPUT_DIR
     ).as_posix()
 
