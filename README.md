@@ -1,26 +1,44 @@
 # Drone vs Bird Detection using YOLO11
 
-Custom object detection project for detecting and distinguishing birds and drones using Ultralytics YOLO11.
+End-to-end computer vision project for detecting and tracking **birds and drones** using a custom fine-tuned YOLO11 model.
 
-The project is being built end-to-end as an AI engineering project:
-
-Dataset Collection → Annotation → Dataset Split → Fine-Tuning → Evaluation → Error Analysis → Inference → FastAPI Deployment
+Dataset Collection → Annotation → Fine-Tuning → Evaluation → Image Detection → Video Tracking → FastAPI → Web Interface → Live Drone Tracking
 
 ---
 
-## Project Goal
+## Features
 
-Build a lightweight object detection model capable of:
+### Image Detection
 
-- Detecting birds
-- Detecting drones
-- Localizing each object using bounding boxes
-- Handling images containing multiple objects
+- Detects birds and drones
+- Supports multiple objects
+- Displays bounding boxes and confidence scores
+- Returns annotated images
 
-Classes:
+### Video Tracking
 
-0 = bird  
-1 = drone
+- Detects birds and drones
+- Uses YOLO11 + ByteTrack
+- Assigns track IDs across frames
+- Produces annotated output video
+- Uses FFmpeg for browser-compatible MP4 playback
+
+### Live Camera
+
+- Drone-only real-time monitoring
+- YOLO11 + ByteTrack tracking
+- Displays bounding box, confidence and Track ID
+- Shows continuous tracked duration
+- Allows short detection gaps without immediately resetting the timer
+
+---
+
+## Classes
+
+| ID | Class |
+|---:|---|
+| 0 | Bird |
+| 1 | Drone |
 
 ---
 
@@ -28,124 +46,42 @@ Classes:
 
 The dataset was manually collected and annotated using Roboflow.
 
-Total annotated images: 192
+**Total annotated images: 192**
 
-A custom Python script was used to create the final dataset split:
+| Split | Images |
+|---|---:|
+| Train | 134 |
+| Validation | 28 |
+| Test | 30 |
 
-- Train: 134 images
-- Validation: 28 images
-- Test: 30 images
+### Dataset Distribution
 
-Distribution:
+| Split | Bird | Drone | Mixed |
+|---|---:|---:|---:|
+| Train | 59 | 64 | 11 |
+| Validation | 16 | 10 | 2 |
+| Test | 16 | 12 | 2 |
 
-Train:
-- Bird: 59
-- Drone: 64
-- Mixed: 11
-
-Validation:
-- Bird: 16
-- Drone: 10
-- Mixed: 2
-
-Test:
-- Bird: 16
-- Drone: 12
-- Mixed: 2
-
-A fixed random seed was used so the split is reproducible.
-
-Each image is always kept together with its matching YOLO annotation file.
-
----
-
-## YOLO Annotation Format
-
-Each object is stored in YOLO format as:
-
-class_id x_center y_center width height
-
-The bounding box coordinates are normalized between 0 and 1.
+A fixed random seed was used for reproducible dataset splitting.
 
 ---
 
 ## Model
 
-Model used: YOLO11 Nano
+- **Model:** YOLO11n
+- **Pretrained weights:** yolo11n.pt
+- **Epochs:** 50
+- **Image size:** 640
+- **Batch size:** 4
+- **GPU:** NVIDIA GTX 1650 4GB
 
-Pretrained weights: yolo11n.pt
-
-YOLO11n was selected because it is lightweight, fast, and suitable for local training and later API deployment.
-
----
-
-## Fine-Tuning
-
-The pretrained YOLO11n model was fine-tuned on the custom bird and drone dataset.
-
-The model was not trained from scratch.
-
-Ultralytics automatically adapted the detection head according to the two project classes defined in data.yaml.
-
-Training configuration:
-
-- Epochs: 50
-- Image size: 640
-- Batch size: 4
-- Workers: 0
-
-Batch size was reduced from 8 to 4 because of GPU memory limitations on the GTX 1650.
+The pretrained YOLO11n model was fine-tuned on the custom bird and drone dataset instead of being trained from scratch.
 
 ---
 
-## Training Losses
+## Evaluation Results
 
-YOLO uses multiple losses because object detection must learn both object class and location.
-
-- cls_loss → predicts whether the object is bird or drone
-- box_loss → improves bounding box location
-- dfl_loss → improves bounding box precision
-
-Lower loss values are generally better.
-
-During training:
-
-- cls_loss decreased from about 3.893 to 0.883
-- box_loss decreased from about 1.426 to 0.799
-
----
-
-## Train, Validation and Test
-
-Training data is used to update model weights.
-
-Validation data is used during training to measure generalization and select the best model.
-
-Test data is only used after training is complete for final evaluation.
-
-YOLO saves:
-
-- best.pt → best validation checkpoint
-- last.pt → final epoch checkpoint
-
-best.pt is used for final evaluation and inference.
-
----
-
-## Evaluation Metrics
-
-Object detection is evaluated mainly using Precision, Recall and mAP instead of plain classification accuracy.
-
-- Precision → how many predicted objects were actually correct
-- Recall → how many real objects were successfully detected
-- mAP50 → detection performance at IoU 0.50
-- mAP50-95 → stricter evaluation across IoU thresholds from 0.50 to 0.95
-
-Higher values are better.
-
----
-
-## Validation Results
+### Validation Results
 
 | Metric | Result |
 |---|---:|
@@ -154,9 +90,7 @@ Higher values are better.
 | mAP50 | 0.821 |
 | mAP50-95 | 0.544 |
 
----
-
-## Final Test Results
+### Final Test Results
 
 | Metric | Result |
 |---|---:|
@@ -165,28 +99,135 @@ Higher values are better.
 | mAP50 | 0.880 |
 | mAP50-95 | 0.584 |
 
-Per-class results:
+### Per-Class Results
 
 | Class | Precision | Recall | mAP50 | mAP50-95 |
 |---|---:|---:|---:|---:|
 | Bird | 0.845 | 0.889 | 0.907 | 0.543 |
 | Drone | 0.910 | 0.786 | 0.854 | 0.625 |
 
-The model performed well on the held-out test set.
-
-Bird detection achieved strong recall, while drone detection achieved very high precision.
+Approximate YOLO inference speed during evaluation: **9.3 ms/image**
 
 ---
 
-## Inference Speed
+## Object Tracking
 
-Approximate test-time speed:
+Video and live tracking use **ByteTrack**.
 
-- Preprocessing: 0.8 ms/image
-- Inference: 9.3 ms/image
-- Postprocessing: 1.6 ms/image
+YOLO detects objects in each frame, while ByteTrack associates detections across consecutive frames and assigns temporary track IDs.
 
-This makes YOLO11n suitable for lightweight deployment.
+Example:
+
+    Frame 1 → Drone ID 4
+    Frame 2 → Drone ID 4
+    Frame 3 → Drone ID 4
+
+Track IDs are temporary tracking identities and do not represent permanent identification of a physical drone.
+
+---
+
+## FastAPI Backend
+
+The trained model is served through FastAPI.
+
+| Endpoint | Purpose |
+|---|---|
+| GET /health | API health check |
+| POST /predict | Image detection |
+| POST /track-video | Video detection and tracking |
+| POST /live-detect | Live drone tracking |
+
+---
+
+## Web Interface
+
+The frontend is built using:
+
+- HTML
+- CSS
+- JavaScript
+
+The application provides three modes:
+
+**Image Detection | Video Tracking | Live Camera**
+
+### Live Camera Pipeline
+
+    Webcam
+       ↓
+    Browser Frame Capture
+       ↓
+    FastAPI
+       ↓
+    YOLO11
+       ↓
+    ByteTrack
+       ↓
+    Track ID + Confidence + Duration
+       ↓
+    Live Bounding Box
+
+---
+
+## Project Structure
+
+    drone-bird-detection/
+    │
+    ├── app.py
+    ├── README.md
+    ├── requirements.txt
+    │
+    ├── scripts/
+    │   ├── split_dataset.py
+    │   ├── train.py
+    │   ├── evaluate.py
+    │   ├── predict.py
+    │   ├── track.py
+    │   └── realtime.py
+    │
+    └── static/
+        ├── index.html
+        ├── style.css
+        └── app.js
+
+---
+
+## Technologies Used
+
+- Python
+- PyTorch
+- Ultralytics YOLO11
+- ByteTrack
+- OpenCV
+- FastAPI
+- Roboflow
+- HTML
+- CSS
+- JavaScript
+
+
+---
+
+## Limitations
+
+- Dataset contains only 192 annotated images
+- Small or distant drones may be harder to detect
+- Lighting, motion blur and different environments can affect performance
+- ByteTrack IDs may change after longer detection gaps
+- Real-time performance depends on available hardware
+
+This project is intended as an **AI/Computer Vision portfolio project**, not a production surveillance system.
+
+---
+
+## Future Improvements
+
+- Larger and more diverse dataset
+- Improved small-drone detection
+- More stable long-term tracking
+- Drone event alerts
+- Automatic recording of confirmed drone events
+- Cloud deployment
 
 ---
 
