@@ -683,3 +683,21 @@ body {
     }
 
 }
+.live-view {
+    width: 100%;
+    max-width: 720px;
+
+    margin: 22px auto 0;
+}
+
+
+.live-view canvas {
+    display: block;
+
+    width: 100%;
+    height: auto;
+
+    border-radius: 9px;
+
+    background: #000;
+}

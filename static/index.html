@@ -59,6 +59,13 @@
                 Video Tracking
             </button>
 
+            <button
+                class="mode-tab"
+                data-mode="live"
+            >
+                Live Camera
+            </button>
+
         </div>
 
 
@@ -315,6 +322,68 @@
                     class="result-image"
                     controls
                 ></video>
+
+            </section>
+
+        </div>
+
+        <div
+            id="liveMode"
+            class="mode-section hidden"
+        >
+
+            <section class="upload-card">
+
+                <h2>Live Drone Monitoring</h2>
+
+                <p class="description">
+                    Use your camera for real-time drone detection.
+                </p>
+
+
+                <div
+                    id="liveView"
+                    class="live-view hidden"
+                >
+                    <video
+                        id="liveVideo"
+                        autoplay
+                        muted
+                        playsinline
+                        hidden
+                    ></video>
+
+                    <canvas id="overlayCanvas"></canvas>
+                </div>
+
+
+                <button
+                    id="startCameraButton"
+                    class="detect-button"
+                >
+                    Start Camera
+                </button>
+
+
+                <button
+                    id="stopCameraButton"
+                    class="detect-button"
+                    disabled
+                >
+                    Stop Camera
+                </button>
+
+
+                <p
+                    id="liveStatus"
+                    class="file-info"
+                ></p>
+
+
+                <p
+                    id="liveError"
+                    class="error-message"
+                ></p>
 
             </section>
 

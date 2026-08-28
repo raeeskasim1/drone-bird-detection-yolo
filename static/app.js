@@ -7,6 +7,8 @@ const imageMode =
 const videoMode =
     document.getElementById("videoMode")
 
+const liveMode =
+    document.getElementById("liveMode")
 
 tabs.forEach(tab => {
 
@@ -21,6 +23,7 @@ tabs.forEach(tab => {
 
         imageMode.classList.add("hidden")
         videoMode.classList.add("hidden")
+        liveMode.classList.add("hidden")
 
 
         const mode =
@@ -33,6 +36,10 @@ tabs.forEach(tab => {
 
         if (mode === "video") {
             videoMode.classList.remove("hidden")
+        }
+
+        if (mode === "live") {
+            liveMode.classList.remove("hidden")
         }
 
     })
@@ -394,6 +401,298 @@ trackButton.addEventListener(
                 "Track Objects"
 
         }
+
+    }
+)
+
+const startCameraButton =
+    document.getElementById("startCameraButton")
+
+const stopCameraButton =
+    document.getElementById("stopCameraButton")
+
+const liveVideo =
+    document.getElementById("liveVideo")
+
+const liveView =
+    document.getElementById("liveView")
+
+const overlayCanvas =
+    document.getElementById("overlayCanvas")
+
+const overlayContext =
+    overlayCanvas.getContext("2d")
+
+const liveStatus =
+    document.getElementById("liveStatus")
+
+const liveError =
+    document.getElementById("liveError")
+
+
+let cameraStream = null
+
+const liveCanvas =
+    document.createElement("canvas")
+
+const liveContext =
+    liveCanvas.getContext("2d")
+
+let liveDetectionRunning = false
+
+async function sendLiveFrame() {
+
+    if (!liveDetectionRunning) {
+        return
+    }
+
+    // Wait until webcam has actual dimensions
+    if (
+        liveVideo.videoWidth === 0 ||
+        liveVideo.videoHeight === 0
+    ) {
+        setTimeout(sendLiveFrame, 200)
+        return
+    }
+
+
+    liveCanvas.width =
+        liveVideo.videoWidth
+
+    liveCanvas.height =
+        liveVideo.videoHeight
+
+
+    // Copy current webcam frame into canvas
+    liveContext.drawImage(
+        liveVideo,
+        0,
+        0,
+        liveCanvas.width,
+        liveCanvas.height
+    )
+
+
+    liveCanvas.toBlob(
+        async blob => {
+
+            if (!blob) {
+                return
+            }
+
+
+            const formData =
+                new FormData()
+
+            formData.append(
+                "file",
+                blob,
+                "frame.jpg"
+            )
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/live-detect",
+                        {
+                            method: "POST",
+                            body: formData
+                        }
+                    )
+
+
+                const data =
+                    await response.json()
+
+
+                if (response.ok) {
+
+                    overlayCanvas.width =
+                        liveVideo.videoWidth
+
+                    overlayCanvas.height =
+                        liveVideo.videoHeight
+
+
+                    // 1. Draw webcam frame on visible canvas
+                    overlayContext.drawImage(
+                        liveVideo,
+                        0,
+                        0,
+                        overlayCanvas.width,
+                        overlayCanvas.height
+                    )
+
+
+                    // 2. Draw YOLO detections on same canvas
+                    data.detections.forEach(
+                        detection => {
+
+                            const [
+                                x1,
+                                y1,
+                                x2,
+                                y2
+                            ] = detection.box
+
+
+                            const width =
+                                x2 - x1
+
+                            const height =
+                                y2 - y1
+
+
+                            overlayContext.lineWidth = 3
+
+                            overlayContext.strokeStyle =
+                                "#22c55e"
+
+
+                            overlayContext.strokeRect(
+                                x1,
+                                y1,
+                                width,
+                                height
+                            )
+
+
+                            const confidence =
+                                (
+                                    detection.confidence * 100
+                                ).toFixed(1)
+
+
+                            const label =
+                                `Drone ID: ${detection.track_id} | ${confidence}% | Tracked: ${detection.duration}s`
+
+
+                            overlayContext.font =
+                                "18px Arial"
+
+                            overlayContext.fillStyle =
+                                "#22c55e"
+
+
+                            overlayContext.fillText(
+                                label,
+                                x1,
+                                Math.max(y1 - 8, 20)
+                            )
+
+                        }
+                    )
+                }
+            }
+
+            catch (error) {
+
+                console.error(
+                    "Live detection error:",
+                    error
+                )
+
+            }
+
+
+            // Send next frame after this request finishes
+            if (liveDetectionRunning) {
+
+                setTimeout(
+                    sendLiveFrame,
+                    200
+                )
+
+            }
+
+        },
+        "image/jpeg",
+        0.8
+    )
+}
+
+startCameraButton.addEventListener(
+    "click",
+    async () => {
+
+        liveError.textContent = ""
+
+        try {
+
+            cameraStream =
+                await navigator.mediaDevices.getUserMedia({
+                    video: true,
+                    audio: false
+                })
+
+
+            liveVideo.srcObject =
+                cameraStream
+
+
+            liveView.classList.remove("hidden")
+
+
+            startCameraButton.disabled = true
+
+            stopCameraButton.disabled = false
+
+
+            liveStatus.textContent =
+                "Camera active"
+
+            liveDetectionRunning = true
+
+            sendLiveFrame()
+        }
+
+        catch (error) {
+
+            console.error(error)
+
+            liveError.textContent =
+                "Unable to access the camera."
+
+        }
+
+    }
+)
+
+stopCameraButton.addEventListener(
+    "click",
+    () => {
+
+        liveDetectionRunning = false
+
+        if (cameraStream) {
+
+            cameraStream
+                .getTracks()
+                .forEach(track => {
+                    track.stop()
+                })
+
+        }
+
+
+        liveVideo.srcObject = null
+
+        liveView.classList.add("hidden")
+
+
+        cameraStream = null
+
+
+        startCameraButton.disabled = false
+
+        stopCameraButton.disabled = true
+
+
+        liveStatus.textContent =
+            "Camera stopped"
+
 
     }
 )

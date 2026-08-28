@@ -50,6 +50,10 @@ app.mount(
     name="static"
 )
 
+live_tracks = {}
+
+TRACK_GAP_TOLERANCE = 1.0
+
 model = YOLO(
     r"runs\detect\runs\drone_bird_yolo11n\weights\best.pt"
 )
@@ -216,6 +220,125 @@ async def track_video(file:UploadFile = File(...)):
     return {
         "message": "Video tracking completed",
         "processed_video": f"/video-outputs/{relative_path}"
+    }
+
+
+@app.post("/live-detect")
+async def live_detect(file: UploadFile = File(...)):
+
+    image_bytes = await file.read()
+
+    try:
+        image = Image.open(
+            BytesIO(image_bytes)
+        ).convert("RGB")
+
+    except UnidentifiedImageError:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid camera frame"
+        )
+
+
+    results = model.track(
+        source=image,
+        tracker="bytetrack.yaml",
+        persist=True,
+        conf=0.35,
+        imgsz=640,
+        classes=[1],
+        verbose=False
+    )
+
+
+    result = results[0]
+
+    detections = []
+
+    current_time = time.time()
+
+    seen_track_ids = set()
+
+
+    for box in result.boxes:
+
+        class_id = int(box.cls[0])
+
+        class_name = model.names[class_id]
+
+        confidence = float(box.conf[0])
+
+        coordinates = box.xyxy[0].tolist()
+
+        track_id = (
+            int(box.id[0])
+            if box.id is not None
+            else None
+        )
+
+        if track_id is not None:
+
+            if track_id not in live_tracks:
+
+                live_tracks[track_id] = {
+                    "first_seen": current_time,
+                    "last_seen": current_time
+                }
+
+            else:
+
+                gap = (
+                    current_time
+                    - live_tracks[track_id]["last_seen"]
+                )
+
+                # Same ID returned after a long gap
+                # Start a NEW timer
+                if gap > TRACK_GAP_TOLERANCE:
+
+                    live_tracks[track_id] = {
+                        "first_seen": current_time,
+                        "last_seen": current_time
+                    }
+
+                else:
+
+                    live_tracks[track_id]["last_seen"] = (
+                        current_time
+                    )
+
+
+            duration = (
+                current_time
+                - live_tracks[track_id]["first_seen"]
+            )
+
+        else:
+
+            duration = 0
+
+        detections.append({
+            "track_id": track_id,
+            "class_id": class_id,
+            "class": class_name,
+            "confidence": round(confidence, 3),
+            "duration": round(duration, 1),
+
+            "box": [
+                round(value, 2)
+                for value in coordinates
+            ]
+        })
+        for track_id in list(live_tracks.keys()):
+
+            last_seen = live_tracks[track_id]["last_seen"]
+
+            if current_time - last_seen > TRACK_GAP_TOLERANCE:
+                del live_tracks[track_id]
+
+    return {
+        "count": len(detections),
+        "detections": detections
     }
 
 @app.get("/")
